@@ -1,0 +1,58 @@
+ublic function Updatecode(Request $request) {
+    $getId = $request->input('id');
+
+    $getDataById = DB::connection('name db')
+        ->table('name table')
+        ->where('id', $getId)
+        ->first();
+
+    if (!$getDataById) {
+        return redirect()->back()->with('error', 'Data not found.');
+    }
+
+    $routeId = $getDataById->rout_id;
+
+    try {
+        
+        $original = (array) $getDataById;
+
+        $updates = [
+            'person_id' => $request->input('person_id'),
+            'rout_indicate' => $request->input('rout_indicate'),
+            'rout_sequence_no' => $request->input('rout_sequence_no'),
+            'rout_is_oninbox' => $request->input('rout_is_oninbox'),
+            'rout_is_emailsent' => $request->input('rout_is_emailsent'),
+        ];
+
+      
+        DB::connection('db_dms')
+            ->table('ts_map_routing_to')
+            ->where('map_id', $getId)
+            ->update($updates);
+
+       
+        foreach ($updates as $key => $newValue) {
+            $oldValue = $original[$key] ?? null;
+
+            if ($oldValue != $newValue) {
+                ChangeLog::create([
+                    'table_name' => 'ts_map_routing_to',
+                    'column_name' => $key,
+                    // 'record_id' => $getId,
+                    'record_id' => $routeId,
+                    'action' => 'update',
+                    'old_values' => $oldValue,
+                    'new_values' => $newValue,
+                    'user_id' => Auth::id(),
+                ]);
+            }
+        }
+
+        return redirect()->to(url("module/dms/routing/{$routeId}/edit"))
+            ->with('successs', 'Routing updated successfully!');
+
+    } catch (\Throwable $th) {
+        return redirect()->to(url("module/dms/routing/{$routeId}/edit"))
+            ->with('error', 'Routing update error!');
+    }
+}
