@@ -1,0 +1,38 @@
+public function destroyMapRouting($id) {
+    try {
+       
+        $deletedData = DB::connection('db_dms')
+            ->table('ts_map_routing_to')
+            ->where('map_id', $id)
+            ->get();
+
+        if ($deletedData->isEmpty()) {
+            return redirect()->route('module.dms.routing.index')
+                ->with('error', 'Data not found.');
+        }
+
+        foreach ($deletedData as $data) {
+            $routeId = $data->rout_id;
+
+            ChangeLog::create([
+                'table_name' => 'ts_map_routing_to',
+                'column_name' => null, // atau 'all' opsional
+                'action' => 'delete',
+                'old_values' => json_encode($data),
+                'new_values' => null,
+                'user_id' => Auth::id(),
+            ]);
+        }
+       
+        DB::connection('db_dms')
+            ->table('ts_map_routing_to')
+            ->where('map_id', $id)
+            ->delete();
+        return redirect()->route('module.dms.routing.index')
+            ->with('successs', 'Routing deleted successfully');
+    } catch (\Exception $th) {
+        return redirect()->route('module.dms.routing.index')
+            ->with('error', 'Failed to delete routing');
+    }
+
+}
