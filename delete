@@ -1,9 +1,9 @@
-public function destroyMapRouting($id) {
+troypublic function destroyMapRouting($id) {
     try {
        
-        $deletedData = DB::connection('db_dms')
-            ->table('ts_map_routing_to')
-            ->where('map_id', $id)
+        $deletedData = DB::connection('name_db')
+            ->table('name_table')
+            ->where('id', $id)
             ->get();
 
         if ($deletedData->isEmpty()) {
